@@ -1,0 +1,6 @@
+shared/*
+*.swp
+containers/*
+cids/*
+bin/*
+image/atlas_base/auth_key.pub
