@@ -1,0 +1,13 @@
+HTTP_PORT=81
+SSH_PORT=22
+
+SERVER_URL=http://localhost:81/
+SERVER_DATA=http://localhost:81/data.php?callback=loadSites
+
+API_KEY=xxxxxxxxx
+SITE_KEY=xxxxxxxxx
+
+HOST=atlas
+MYSQL_PASSWORD=mysql
+
+SAMPLE_DATA=1

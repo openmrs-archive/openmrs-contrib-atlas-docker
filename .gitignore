@@ -4,3 +4,5 @@ containers/*
 cids/*
 bin/*
 image/atlas_base/auth_key.pub
+image/atlas_20/atlas.cfg
+atlas.cfg

@@ -27,7 +27,7 @@ ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 #Install Lamp server
 RUN apt-get install -y wget apache2 mysql-client mysql-server libapache2-mod-php5 php5-mysql php5-mcrypt &&\
-	apt-get install -y php5-json  php5-cli
+	apt-get install -y php5-json  php5-cli git
 
 #Configure Apache
 ENV APACHE_RUN_USER www-data
@@ -53,7 +53,3 @@ RUN wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-1.9.7-linux-x
 		chmod a+x /usr/local/bin/phantomjs
 
 RUN apt-get install -y fontconfig xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic
-
-EXPOSE 22 80
-
-CMD ["/usr/bin/supervisord"]

@@ -3,6 +3,7 @@
 command=$1
 config=$2
 opt=$3
+. atlas.cfg
 
 cd "$(dirname "$0")"
 
@@ -13,7 +14,9 @@ config_file=containers/"$config".yml
 cidfile=cids/"$config".cid
 cidbootstrap=cids/"$config"_boostrap.cid
 test_image=ubuntu:14.04
-image=alexisduque/atlas_base
+image=alexisduque/openmrs:atlas_base
+image_atlas=alexisduque/openmrs:atlas
+
 docker_path=`which docker.io || which docker`
 
 docker_ip=`/sbin/ifconfig | \
@@ -33,6 +36,7 @@ usage () {
   echo "    ssh:        Start a bash shell in a running container"
   echo "    logs:       Docker logs for container"
   echo "    build:      Build a container"
+  echo "    update:     Destroy and build an Atlas App container based on atlas_base"
   echo "    rebuild:    Rebuild a container (destroy old, bootstrap, start new)"
   echo
   echo "Options:"
@@ -165,7 +169,7 @@ run_start(){
   if [ ! -e $cidfile ]
      then
        echo "No cid found, creating a new container"
-       ports="-p 22:22 -p 81:80"
+       ports="-p $SSH_PORT:22 -p $HTTP_PORT:80"
 
        existing=`$docker_path ps -a | awk '{ print $1, $(NF) }' | grep "$config$" | awk '{ print $1 }'`
        if [ ! -z $existing ]
@@ -174,8 +178,8 @@ run_start(){
          echo $existing > $cidfile
          exit 1
        fi
-
-       $docker_path run "${env[@]}" -h "`hostname`-$config" -e DOCKER_HOST_IP=$docker_ip --name $config -t --cidfile $cidfile $ports $image
+       echo $docker_path run "${env[@]}" -h $HOST -e DOCKER_HOST_IP=$docker_ip --name $config -t --cidfile $cidfile $ports $image_atlas
+       $docker_path run "${env[@]}" -h $HOST -e DOCKER_HOST_IP=$docker_ip --name $config -t --cidfile $cidfile $ports $image_atlas
        exit 0
      else
        cid=`cat $cidfile`
@@ -208,7 +212,11 @@ run_build(){
   then 
     rm image/atlas_base/auth_key.pub
   fi
-
+  if [ -f image/atlas_20/atlas.cfg ]
+  then 
+    image/atlas_20/atlas.cfg
+  fi
+  cp atlas.cfg image/atlas_20/atlas.cfg
   echo $ssh_pub_key > image/atlas_base/auth_key.pub
   # Is the image available?
   # If not, pull it here so the user is aware what's happening.
@@ -218,7 +226,38 @@ run_build(){
 
   env=("${env[@]}" "-e" "SSH_PUB_KEY=$ssh_pub_key")
 
-  $docker_path build -t $image ./image/atlas_base
+  $docker_path build -t $image ./image/atlas_base && \
+  $docker_path build -t $image_atlas ./image/atlas_20
+}
+
+run_update(){
+  if [ -e $cidfile ]
+  then
+    echo "destroying container $cidfile"
+    $docker_path stop -t 10 `cat $cidfile`
+    $docker_path rm `cat $cidfile` && rm $cidfile
+  else
+    echo "nothing to destroy cidfile does not exist"
+  fi
+  get_ssh_pub_key
+  $docker_path history $image_atlas >/dev/null 2>&1 && $docker_path rmi -f $image_atlas 
+
+  if [ -f image/atlas_20/atlas.cfg ]
+  then 
+    image/atlas_20/atlas.cfg
+  fi
+  cp atlas.cfg image/atlas_20/atlas.cfg
+
+  # Is the image available?
+  # If not, pull it here so the user is aware what's happening.
+  $docker_path history $image >/dev/null 2>&1 || $docker_path build -t $image ./image/atlas_base && \
+
+  rm -f $cidbootstrap
+
+  env=("${env[@]}" "-e" "SSH_PUB_KEY=$ssh_pub_key")
+
+  $docker_path build -t $image_atlas ./image/atlas_20 || { echo 'Command failed' ; exit 1; }
+
 }
 
 case "$command" in
@@ -227,7 +266,7 @@ case "$command" in
       echo "Successfully bootstrapped, to startup use ./launcher start $config"
       exit 0
       ;;
-      
+
   ssh)
       if [ ! -e $cidfile ]
          then
@@ -284,6 +323,22 @@ case "$command" in
       fi
 
       run_start
+      exit 0
+      ;;
+
+  update)
+      if [ -e $cidfile ]
+        then
+          echo "Stopping old container"
+          $docker_path stop -t 10 `cat $cidfile`
+      fi
+
+      run_update
+      
+      if [ -e $cidfile ]
+        then
+          $docker_path rm `cat $cidfile` && rm $cidfile
+      fi
       exit 0
       ;;
 

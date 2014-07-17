@@ -18,10 +18,27 @@ If you do not do any of the above, as RoboCop once said, ["there will be… trou
 The simplest way to get started is the  **standalone** template:
 
 1. **Clone** this project from github into `/var/atlas` on your server: `git clone https://github.com/alexisduque/atlas-docker.git /var/atlas`
+2. **Configure** environnement variable, hostname, ports `binding in atlas.cfg`
 2. **Build** the image: `sudo ./launcher build atlas`
 5. **Start** the image: `sudo ./launcher start atlas`
 
-Note: you can add yourself to the Docker group if you wish to avoid `sudo` with `usermod -aG docker <your-user-name>`.
+Note 1: you can add yourself to the Docker group if you wish to avoid `sudo` with `usermod -aG docker <your-user-name>`.
+
+Note 2: you can build multiple atlas containers with different configurations, changing its name : `sudo ./launcher start atlas-first` and `sudo ./launcher start atlas-test`.
+
+### Configuration
+
+Rename atlas.cfg.sample to atlas.cfg and chaqnge values with your configuration :
+
+- `HTTP_PORT` : http port to access Atlas application
+- `SSH_PORT` : port number to ssh to the container
+- `HOST` : choose your container hostname
+- `MYSQL_PASSWORD` : root mysql pqssword
+- `API_KEY` : ID API key for Atlas
+- `SITE_KEY` : ID Site key for Atlas
+- `SAMPLE_DATA` : set 1 to load a sample dataset
+- `SERVER_URL` : atlas URL (for screen capture)
+- `SERVER_DATA` : URL to get JSON with markers
 
 ### Directory Structure
 
@@ -39,7 +56,7 @@ Dockerfile for both the base image `atlas_base` and atlas image `Comming soon ..
 
 - `atlas_base` contains all the OS dependencies including sshd, apache2, mysql, php5, phantomJS, composer.
 
-- `Todo ....` builds on the base image and configures Atlas Server.
+- `atlas_20` builds on the base image and configures Atlas Server.
 
 
 ### Launcher
@@ -56,11 +73,15 @@ Commands:
     ssh:        Start a bash shell in a running container
     logs:       Docker logs for container
     build:      Build a container for the config based on a template
+    update:     Destroy and build an Atlas App container based on atlas_base (doesn't affects base image)
 ```
 
-### Upgrading Atlas - TODO
+### Upgrading Atlas
 
-The Docker setup gives you multiple upgrade options:
+Update Atlas Application
+  - `git clone https://https://github.com/alexisduque/atlas-docker`
+  - `./launcher update atlas`
+  - `./launcher start atlas`
 
 Create a new base image by running:
 
