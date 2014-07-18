@@ -1,4 +1,5 @@
 HTTP_PORT=81
+HTTPS_PORT=444
 SSH_PORT=22
 
 SERVER_URL=http://localhost:81/

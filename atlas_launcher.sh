@@ -20,7 +20,7 @@ image_atlas=alexisduque/openmrs:atlas
 docker_path=`which docker.io || which docker`
 
 docker_ip=`/sbin/ifconfig | \
-                grep -B1 "inet addr" | \
+                grep -B1 "inet adr" | \
                 awk '{ if ( $1 == "inet" ) { print $2 } else if ( $2 == "Link" ) { printf "%s:" ,$1 } }' | \
                 grep docker0 | \
                 awk -F: '{ print $3 }';`
@@ -169,7 +169,7 @@ run_start(){
   if [ ! -e $cidfile ]
      then
        echo "No cid found, creating a new container"
-       ports="-p $SSH_PORT:22 -p $HTTP_PORT:80"
+       ports="-p $SSH_PORT:22 -p $HTTP_PORT:80 -p $HTTPS_PORT:443"
 
        existing=`$docker_path ps -a | awk '{ print $1, $(NF) }' | grep "$config$" | awk '{ print $1 }'`
        if [ ! -z $existing ]

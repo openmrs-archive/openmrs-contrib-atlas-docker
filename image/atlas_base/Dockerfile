@@ -26,8 +26,8 @@ RUN chmod 640 /root/.ssh/authorized_keys
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 #Install Lamp server
-RUN apt-get install -y wget apache2 mysql-client mysql-server libapache2-mod-php5 php5-mysql php5-mcrypt &&\
-	apt-get install -y php5-json  php5-cli git
+RUN apt-get install -y wget nano apache2 mysql-client mysql-server libapache2-mod-php5 php5-mysql php5-mcrypt &&\
+	apt-get install -y php5-json  php5-cli git openssl ssl-cert sharutils libaio1 libaio-dev
 
 #Configure Apache
 ENV APACHE_RUN_USER www-data

@@ -35,6 +35,7 @@ php artisan migrate || { echo 'Command failed' ; exit 1; }
 
 rm /etc/apache2/sites-available/000-default.conf
 mv /tmp/000-default.conf /etc/apache2/sites-available/000-default.conf
+sed -i 's/HTTPS-PORT/'$HTTPS_PORT'/g' /etc/apache2/sites-available/000-default.conf
 #service apache2 start
 #php artisan screen-capture --force
 sed -i 's/'$TMP_HOST'/'$HOST'/' bootstrap/start.php
