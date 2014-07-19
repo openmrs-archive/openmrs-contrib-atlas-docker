@@ -8,7 +8,7 @@ if [ ! -f /etc/apache2/ssl/server.key ]; then
         SUBJ="
 C=US
 ST=United States
-O=Dischord
+O=OpenMRS
 localityName=Indianapolis
 commonName=$HOST
 organizationalUnitName=openmrs

@@ -11,9 +11,9 @@ sed -i 's/\/var\/www/\/opt\/atlas\/public/g' /etc/apache2/apache2.conf
 sed -i 's/user/atlas/g' .env.prod.php
 sed -i 's/password/atlas/g' .env.prod.php
 sed -i "s/secret'/secret',/g" .env.prod.php
-sed -i 's#http://localhost:3000#https://id-stg.openmrs.org#g' .env.prod.php
+sed -i 's#http://localhost:3000#'$ID_HOST'#g' .env.prod.php
 sed -i 's#http://localhost/openmrs-contrib-atlas/public/data.php?callback=loadSites#'$SERVER_DATA'#g' .env.prod.php
-sed -i 's#http://localhost/openmrs-contrib-atlas/public/#'$SERVER_URL'#g' .env.prod.php
+sed -i 's#http://localhost/openmrs-contrib-atlas/public/#'$CAPTURE_URL'#g' .env.prod.php
 sed -i 's/bin\/phantomjs/local\/bin\/phantomjs/g' .env.prod.php
 
 #Set correct database collation and charset 

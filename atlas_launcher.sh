@@ -169,7 +169,7 @@ run_start(){
   if [ ! -e $cidfile ]
      then
        echo "No cid found, creating a new container"
-       ports="-p $SSH_PORT:22 -p $HTTP_PORT:80 -p $HTTPS_PORT:443"
+       ports="-p $SSH_PORT:22 -p $HTTP_PORT:80 -p $HTTPS_PORT:443 -p 8888:8888"
 
        existing=`$docker_path ps -a | awk '{ print $1, $(NF) }' | grep "$config$" | awk '{ print $1 }'`
        if [ ! -z $existing ]

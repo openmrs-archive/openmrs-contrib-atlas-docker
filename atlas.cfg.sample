@@ -2,11 +2,13 @@ HTTP_PORT=81
 HTTPS_PORT=444
 SSH_PORT=22
 
-SERVER_URL=http://localhost:81/
-SERVER_DATA=http://localhost:81/data.php?callback=loadSites
+SERVER_URL=https://localhost:444/
+CAPTURE_URL=https://atlas.openmrs.org
+SERVER_DATA=https://localhost:444/data.php?callback=loadSites
 
-API_KEY=xxxxxxxxx
-SITE_KEY=xxxxxxxxx
+API_KEY=1234567890abcdef
+SITE_KEY=localhost
+ID_HOST=http://localhost:8888
 
 HOST=atlas
 MYSQL_PASSWORD=mysql
