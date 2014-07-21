@@ -30,15 +30,17 @@ Note 2: you can build multiple atlas containers with different configurations, c
 
 Rename atlas.cfg.sample to atlas.cfg and chaqnge values with your configuration :
 
-- `HTTP_PORT` : http port to access Atlas application
-- `SSH_PORT` : port number to ssh to the container
+- `HTTP_PORT` : http port to access Atlas application (use 80, shutdown apache on your host)
+- `HTTPs_PORT` : https port to access Atlas application (use 443, shutdown apache on your host)
+- `SSH_PORT` : port number to ssh to the container (use, 22 or 23 if sshd is allready running on your host)
 - `HOST` : choose your container hostname
 - `MYSQL_PASSWORD` : root mysql pqssword
 - `API_KEY` : ID API key for Atlas
 - `SITE_KEY` : ID Site key for Atlas
 - `SAMPLE_DATA` : set 1 to load a sample dataset
-- `SERVER_URL` : atlas URL (for screen capture)
-- `SERVER_DATA` : URL to get JSON with markers
+- `SERVER_URL` : your server URL (for ID multipass callback - http://server-ip/)
+- `CAPTURE_URL` : your server URL (for ID multipass callback)
+- `SERVER_DATA` : URL to get JSON with markers (http://server-ip/data.php?callback=loadSites)
 
 ### Directory Structure
 
