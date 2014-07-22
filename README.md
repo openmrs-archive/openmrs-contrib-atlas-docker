@@ -15,10 +15,11 @@ If you do not do any of the above, as RoboCop once said, ["there will be… trou
 
 ### Pull the container and run it
 
-1. **Pull** this container from Docker Hub : ``docker pull openmrs/atlas:atlas_20
+1. **Pull** this container from Docker Hub : ``docker pull openmrs/atlas:2.0``
 2. **Run** with environnement variable, hostname, ports 
-`docker run -p 80:80 -p 8888:8888 -p 443:443 -p 22:22 -e HOST=atlas -e SERVER_URL=http://myip openmrs/atlas:atlas_20`
-2. **Commit your chage** : `sudo ./launcher build atlas`
+`docker run -p 80:80 -p 8888:8888 -p 443:443 -p 22:22 -e HOST=atlas -e SERVER_URL=https://myip/ -e SERVER_DATA=https://myip/data.php?callback=loadSites --name atlas openmrs/atlas:atlas_20`
+3. **Shutdow** the container when you finishe your work : ``docker stop atlas``
+4. **Start** the container when needed : ``docker start atlas``
 
 ### Configuration
 
