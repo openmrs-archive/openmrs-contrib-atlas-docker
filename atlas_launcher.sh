@@ -14,8 +14,8 @@ config_file=containers/"$config".yml
 cidfile=cids/"$config".cid
 cidbootstrap=cids/"$config"_boostrap.cid
 test_image=ubuntu:14.04
-image=alexisduque/openmrs:atlas_base
-image_atlas=alexisduque/openmrs:atlas
+image=openmrs/atlas:base
+image_atlas=openmrs/atlas:atlas_20
 
 docker_path=`which docker.io || which docker`
 
@@ -38,6 +38,7 @@ usage () {
   echo "    build:      Build a container"
   echo "    update:     Destroy and build an Atlas App container based on atlas_base"
   echo "    rebuild:    Rebuild a container (destroy old, bootstrap, start new)"
+  echo "    clean:      Stop all containers and  remove all images from your local history !DANGER!"
   echo
   echo "Options:"
   echo "    --skip-prereqs   Don't check prerequisites"
@@ -80,14 +81,14 @@ prereqs() {
   if [[ "$test" =~ "aufs" ]] ; then : ; else
     echo "Your Docker installation is not using aufs, in the past we have had issues with it"
     echo "If you are unable to bootstrap your image (or stop it) please report the issue at:"
-    echo "https://meta.discourse.org/t/discourse-docker-installation-without-aufs/15639"
+    echo "https://help.openmrs.org"
   fi
 
   # 3. running recommended docker version
   test=($($docker_path --version))  # Get docker version string
   test=${test[2]//,/}  # Get version alone and strip comma if exists
 
-  [[ "$test" =~ "0.12.0" ]] && echo "You are running a broken version of Docker, please upgrade ASAP. See: https://meta.discourse.org/t/the-installation-stopped-in-the-middle/16311/ for more details." && exit 1
+  [[ "$test" =~ "0.12.0" ]] && echo "You are running a broken version of Docker, please upgrade ASAP." && exit 1
 
   # At least minimum version
   if compare_version "${docker_min_version}" "${test}"; then
@@ -104,31 +105,26 @@ prereqs() {
   test=`$docker_path run -i --rm -a stdout -a stderr $test_image echo working`
   if [[ "$test" =~ "working" ]] ; then : ; else
     echo "Your Docker installation is not working correctly"
-    echo
-    echo "See: https://meta.discourse.org/t/docker-error-on-bootstrap/13657/18?u=sam"
     exit 1
   fi
 }
 
-if [ "$opt" != "--skip-prereqs" ] ; then
-  prereqs
+if [ "$opt" != "--skip-prereqs" ]
+then
+  if [ "$command" != "clean" ]
+    then
+    prereqs
+  fi
 fi
 
+clean="clean"
 get_ssh_pub_key() {
   if tty -s ; then
     if [[ ! -e ~/.ssh/id_rsa.pub && ! -e ~/.ssh/id_dsa.pub ]] ; then
-      echo "This user has no SSH key, but a SSH key is required to access the Discourse Docker container."
-      read -p "Generate a SSH key? (Y/n) " -n 1 -r
-      if [[ $REPLY =~ ^[Nn]$ ]] ; then
-        echo
-        echo WARNING: You may not be able to log in to your container.
-        echo
-      else
-        echo
-        echo Generating SSH key
-        mkdir -p ~/.ssh && ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
-        echo
-      fi
+      echo "This user has no SSH key, but a SSH key is required to access the OpenMRS Atlas Docker container."
+      echo "Generating a SSH key ...."
+      mkdir -p ~/.ssh && ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
+      echo
     fi
   fi
 
@@ -178,7 +174,6 @@ run_start(){
          echo $existing > $cidfile
          exit 1
        fi
-       echo $docker_path run "${env[@]}" -h $HOST -e DOCKER_HOST_IP=$docker_ip --name $config -t --cidfile $cidfile $ports $image_atlas
        $docker_path run "${env[@]}" -h $HOST -e DOCKER_HOST_IP=$docker_ip --name $config -t --cidfile $cidfile $ports $image_atlas
        exit 0
      else
@@ -226,8 +221,9 @@ run_build(){
 
   env=("${env[@]}" "-e" "SSH_PUB_KEY=$ssh_pub_key")
 
-  $docker_path build -t $image ./image/atlas_base && \
-  $docker_path build -t $image_atlas ./image/atlas_20
+  ($docker_path build -t $image ./image/atlas_base && \
+  $docker_path build -t $image_atlas ./image/atlas_20) || \
+  ( echo "An error occur during the build process ." && exit 1)
 }
 
 run_update(){
@@ -354,6 +350,13 @@ case "$command" in
           echo "nothing to destroy cidfile does not exist"
           exit 1
       fi
+      ;;
+
+  clean)
+      docker stop $(docker ps -a -q)
+      docker rm -f $(docker ps -a -q)
+      docker rmi -f $(docker images -a -q)
+      exit 0
       ;;
 esac
 
