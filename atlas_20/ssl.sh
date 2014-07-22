@@ -1,6 +1,6 @@
 #!/bin/bash
-. /tmp/atlas.cfg
 
+HOST=${hostname}
 if [ ! -f /etc/apache2/ssl/server.key ]; then
         mkdir -p /etc/apache2/ssl
         KEY=/etc/apache2/ssl/server.key

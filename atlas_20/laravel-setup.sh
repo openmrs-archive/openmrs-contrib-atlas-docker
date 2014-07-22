@@ -1,9 +1,13 @@
 #!/bin/bash
 
-. /tmp/atlas.cfg
+if [ ! -e /etc/.initsuccess ]
+then
+/tmp/mysql-setup.sh
+/tmp/ssl.sh
+/tmp/mysql-setup.sh
+/tmp/ssl.sh
 
 cd /opt/atlas
-
 cp env.local.php .env.prod.php
 
 sed -i 's/\/var\/www/\/opt\/atlas\/public/g' /etc/apache2/apache2.conf
@@ -35,10 +39,21 @@ php artisan migrate || { echo 'Command failed' ; exit 1; }
 
 rm /etc/apache2/sites-available/000-default.conf
 mv /tmp/000-default.conf /etc/apache2/sites-available/000-default.conf
-sed -i 's/HTTPS-PORT/'$HTTPS_PORT'/g' /etc/apache2/sites-available/000-default.conf
-#service apache2 start
-#php artisan screen-capture --force
-sed -i 's/'$TMP_HOST'/'$HOST'/' bootstrap/start.php
 
+sed -i 's/HTTPS-PORT/'$HTTPS_PORT'/g' /etc/apache2/sites-available/000-default.conf
+
+sed -i 's/'$TMP_HOST'/'$HOST'/' bootstrap/start.php
+cd /opt/auth
+
+echo "Listen 8888" >> /etc/apache2/apache2.conf
+
+sed -i 's#https://atlas.local/#'$SERVER_URL#'g' config.php
 service mysql stop
-#service apache2 stop
+sed -i -e"s/^bind-address\s*=\s*127.0.0.1/bind-address = 0.0.0.0/" /etc/mysql/my.cnf
+
+crontab /etc/crontab
+
+touch /etc/.initsuccess
+fi
+
+/usr/bin/supervisord

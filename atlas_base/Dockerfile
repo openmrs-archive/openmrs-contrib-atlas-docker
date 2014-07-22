@@ -12,16 +12,15 @@ RUN apt-get -y update &&\
     apt-get -y upgrade
 
 RUN mkdir -p /var/run/sshd &&\
-	echo 'root:test' |chpasswd &&\
 	mkdir -p /var/log/supervisor &&\
 	mkdir -p /var/lib/dock &&\
 	mkdir -p /var/lib/mysql
 
 #Install OpenSSH and Supervisor
 RUN apt-get install -y openssh-server supervisor
-RUN mkdir -p /root/.ssh
-ADD auth_key.pub /root/.ssh/authorized_keys
-RUN chmod 640 /root/.ssh/authorized_keys
+RUN mkdir -p /root/.ssh &&\
+	echo "root:password" | chpasswd
+RUN sed --in-place=.bak 's/without-password/yes/' /etc/ssh/sshd_config
 
 #Install Lamp server
 RUN apt-get update && apt-get install -y wget nano apache2 mysql-client mysql-server libapache2-mod-php5 php5-mysql php5-mcrypt &&\
@@ -51,3 +50,9 @@ RUN wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-1.9.7-linux-x
 		chmod a+x /usr/local/bin/phantomjs
 
 RUN apt-get install -y fontconfig xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic
+
+ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+EXPOSE 22 80 443 8888
+
+CMD ["/usr/bin/supervisord"]

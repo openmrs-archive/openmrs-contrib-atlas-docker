@@ -1,7 +1,4 @@
 #!/bin/bash
-
-. /tmp/atlas.cfg
-
 chown mysql:mysql /var/run/mysqld/
 mysql_install_db
 service mysql start
