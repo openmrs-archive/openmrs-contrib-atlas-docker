@@ -4,10 +4,8 @@ MAINTAINER Alexis DUQUE "alexis.duque@openmrs.org"
 ENV HTTP_PORT 80
 ENV HTTPS_PORT 443
 ENV SSH_PORT 22
-ENV SERVER_URL https://localhost/
+ENV HOST_IP localhost
 ENV CAPTURE_URL https://atlas.openmrs.org
-ENV SERVER_DATA https://localhost/data.php?callback=loadSites
-ENV ID_HOST http://localhost:8888
 ENV HOST atlas
 ENV MYSQL_PASSWORD mysql
 ENV SAMPLE_DATA 1

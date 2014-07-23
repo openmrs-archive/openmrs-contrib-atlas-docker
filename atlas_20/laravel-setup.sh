@@ -4,8 +4,11 @@ if [ ! -e /etc/.initsuccess ]
 then
 /tmp/mysql-setup.sh
 /tmp/ssl.sh
-/tmp/mysql-setup.sh
 /tmp/ssl.sh
+
+ID_HOST=${ID_HOST:-http://${HOST_IP}:8888}
+SERVER_DATA=${SERVER_DATA:-https://${HOST_IP}:$HTTPS_PORT/data.php?callback=loadSites}
+SERVER_URL=${SERVER_URL:-https://${HOST_IP}:${HTTPS_PORT}/}
 
 cd /opt/atlas
 cp env.local.php .env.prod.php
@@ -42,7 +45,6 @@ mv /tmp/000-default.conf /etc/apache2/sites-available/000-default.conf
 
 sed -i 's/HTTPS-PORT/'$HTTPS_PORT'/g' /etc/apache2/sites-available/000-default.conf
 
-sed -i 's/'$TMP_HOST'/'$HOST'/' bootstrap/start.php
 cd /opt/auth
 
 echo "Listen 8888" >> /etc/apache2/apache2.conf
