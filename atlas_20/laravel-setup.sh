@@ -56,6 +56,20 @@ sed -i -e"s/^bind-address\s*=\s*127.0.0.1/bind-address = 0.0.0.0/" /etc/mysql/my
 crontab /etc/crontab
 
 touch /etc/.initsuccess
+else
+cd /opt/atlas
+git remote update
+LOCAL=$(git rev-parse @)
+REMOTE=$(git rev-parse @{u})
+BASE=$(git merge-base @ @{u})
+
+if [ $LOCAL = $REMOTE ]; then
+    echo "Up-to-date"
+elif [ $LOCAL = $BASE ]; then
+    echo "Need to pull"
+    git pull origin master && composer update && php artisan migrate
+fi
+
 fi
 
 /usr/bin/supervisord
