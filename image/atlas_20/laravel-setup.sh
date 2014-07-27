@@ -2,12 +2,21 @@
 
 . /tmp/atlas.cfg
 
-cd /opt/atlas
+if [ ! -e /etc/.initsuccess ]
+then
+/tmp/ssl.sh
 
+MYSQL_HOST=${MYSQL_HOST:-atlas_db}
+ID_HOST=${ID_HOST:-http://${HOST_IP}:8888}
+SERVER_DATA=${SERVER_DATA:-https://${HOST_IP}:$HTTPS_PORT/data.php?callback=loadSites}
+SERVER_URL=${SERVER_URL:-https://${HOST_IP}:${HTTPS_PORT}/}
+
+cd /opt/atlas
 cp env.local.php .env.prod.php
 
 sed -i 's/\/var\/www/\/opt\/atlas\/public/g' /etc/apache2/apache2.conf
 
+sed -i "s/'DB_HOST' => 'localhost'/'DB_HOST' => '$MYSQL_HOST'/g" .env.prod.php
 sed -i 's/user/atlas/g' .env.prod.php
 sed -i 's/password/atlas/g' .env.prod.php
 sed -i "s/secret'/secret',/g" .env.prod.php
@@ -24,21 +33,41 @@ TMP_HOST=$(hostname)
 #Set production hostname in bootstrap/start.php
 sed -i 's/atlas-server/'$TMP_HOST'/' bootstrap/start.php
 
-service mysql start
-sleep 5
 if [ $SAMPLE_DATA = "1" ]
 then
-	mysql -uatlas -patlas --database atlas < /tmp/atlas.sql || { echo 'Command failed' ; exit 1; }
+	mysql -uatlas -h $MYSQL_HOST -patlas --database atlas < /tmp/atlas.sql || { echo 'Command failed' ; exit 1; }
 fi
 
 php artisan migrate || { echo 'Command failed' ; exit 1; }
 
 rm /etc/apache2/sites-available/000-default.conf
 mv /tmp/000-default.conf /etc/apache2/sites-available/000-default.conf
-sed -i 's/HTTPS-PORT/'$HTTPS_PORT'/g' /etc/apache2/sites-available/000-default.conf
-#service apache2 start
-#php artisan screen-capture --force
-sed -i 's/'$TMP_HOST'/'$HOST'/' bootstrap/start.php
 
-service mysql stop
-#service apache2 stop
+sed -i 's/HTTPS-PORT/'$HTTPS_PORT'/g' /etc/apache2/sites-available/000-default.conf
+
+cd /opt/auth
+
+echo "Listen 8888" >> /etc/apache2/apache2.conf
+
+sed -i 's#https://atlas.local/#'$SERVER_URL#'g' config.php
+
+crontab /etc/crontab
+
+touch /etc/.initsuccess
+else
+cd /opt/atlas
+git remote update
+LOCAL=$(git rev-parse @)
+REMOTE=$(git rev-parse @{u})
+BASE=$(git merge-base @ @{u})
+
+if [ $LOCAL = $REMOTE ]; then
+    echo "Up-to-date"
+elif [ $LOCAL = $BASE ]; then
+    echo "Need to pull"
+    git pull origin master && composer update && php artisan migrate
+fi
+
+fi
+
+/usr/bin/supervisord

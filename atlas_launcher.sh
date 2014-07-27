@@ -12,11 +12,15 @@ docker_rec_version='0.11.1'
 
 config_file=containers/"$config".yml
 cidfile=cids/"$config".cid
+cidfiledata=cids/"$config"_data.cid
+cidfiledb=cids/"$config"_db.cid
 cidbootstrap=cids/"$config"_boostrap.cid
+
 test_image=ubuntu:14.04
 image=openmrs/atlas:base
 image_atlas=openmrs/atlas:atlas_20
-
+image_db=openmrs/atlas:mysql_db
+image_data=openmrs/atlas:data
 docker_path=`which docker.io || which docker`
 
 docker_ip=`/sbin/ifconfig | \
@@ -161,20 +165,20 @@ run_stop(){
 }
 
 run_start(){
-
   if [ ! -e $cidfile ]
      then
        echo "No cid found, creating a new container"
        ports="-p $SSH_PORT:22 -p $HTTP_PORT:80 -p $HTTPS_PORT:443 -p 8888:8888"
 
        existing=`$docker_path ps -a | awk '{ print $1, $(NF) }' | grep "$config$" | awk '{ print $1 }'`
+       echo $existing
        if [ ! -z $existing ]
        then
          echo "Found an existing container by its name, recovering cidfile, please rerun"
          echo $existing > $cidfile
          exit 1
        fi
-       $docker_path run "${env[@]}" -h $HOST -e DOCKER_HOST_IP=$docker_ip --name $config -t --cidfile $cidfile $ports $image_atlas
+       $docker_path run "${env[@]}" -h $HOST -e DOCKER_HOST_IP=$docker_ip --name $config -t --link $config"_db":$config"_db" --cidfile $cidfile $ports $image_atlas
        exit 0
      else
        cid=`cat $cidfile`
@@ -193,9 +197,91 @@ run_start(){
          rm $cidfile
          exit 1
        fi
-
        echo "cid found, ensuring container is started"
        $docker_path start `cat $cidfile`
+       exit 0
+  fi
+
+}
+run_create_storage(){
+  storage=$config"_data"
+  echo $storage
+  echo "start storage"
+  if [ ! -e $cidfiledata ]
+     then
+       echo "No cid found, creating a new storage container"
+       existing=`$docker_path ps -a | awk '{ print $1, $(NF) }' | grep "'$storage'$" | awk '{ print $1 }'`
+       if [ ! -z $existing ]
+       then
+         echo "Found an existing container by its name, recovering cidfile, please rerun"
+         echo $existing > $cidfiledata
+         exit 0
+       fi
+       echo $docker_path run "${env[@]}" -h $HOST -e DOCKER_HOST_IP=$docker_ip --name $storage -t --cidfile $cidfiledata $image_data
+       $docker_path run "${env[@]}" --name $storage -t --cidfile $cidfiledata $image_data
+       exit 0
+     else
+       cid=`cat $cidfiledata`
+
+       if [ -z $cid ]
+       then
+         echo "Detected empty cid file, deleting, please re-run"
+         rm $cidfiledata
+         exit 1
+       fi
+
+       found=`$docker_path ps -q -a --no-trunc | grep $cid`
+       if [ -z $found ]
+       then
+         echo "Invalid cid file, deleting, please re-run"
+         rm $cidfiledata
+         exit 1
+       fi
+
+       echo "cid found, ensuring container is started"
+       $docker_path start `cat $cidfiledata`
+       exit 0
+  fi
+
+}
+run_start_mysql(){
+  storage=$config"_data"
+  echo $storage
+  echo "start mysql server"
+  if [ ! -e $cidfiledb ]
+     then
+       echo "No cid found, creating a new container"
+       volume="--volumes-from $storage"
+
+       existing=`$docker_path ps -a | awk '{ print $1, $(NF) }' | grep "'$config_db'$" | awk '{ print $1 }'`
+       if [ ! -z $existing ]
+       then
+         echo "Found an existing container by its name, recovering cidfile, please rerun"
+         echo $existing > $cidfiledb
+         exit 0
+       fi
+       $docker_path run "${env[@]}" --name $config'_db' -d -t --cidfile $cidfiledb $volume $image_db
+       exit 0
+     else
+       cid=`cat $cidfiledb`
+
+       if [ -z $cid ]
+       then
+         echo "Detected empty cid file, deleting, please re-run"
+         rm $cidfiledb
+         exit 1
+       fi
+
+       found=`$docker_path ps -q -a --no-trunc | grep $cid`
+       if [ -z $found ]
+       then
+         echo "Invalid cid file, deleting, please re-run"
+         rm $cidfiledb
+         exit 1
+       fi
+
+       echo "cid found, ensuring container is started"
+       $docker_path start `cat $cidfiledb`
        exit 0
   fi
 
@@ -301,6 +387,16 @@ case "$command" in
 
   start)
       run_start
+      exit 0
+      ;;
+
+  start-db)
+      run_start_mysql
+      exit 0
+      ;;
+
+  start-volume)
+      run_create_storage
       exit 0
       ;;
 
