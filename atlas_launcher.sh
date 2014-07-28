@@ -17,7 +17,7 @@ cidfiledb=cids/"$config"_db.cid
 cidbootstrap=cids/"$config"_boostrap.cid
 
 test_image=ubuntu:14.04
-image=openmrs/atlas:base
+image=openmrs/atlas:base_web
 image_atlas=openmrs/atlas:atlas_20
 image_db=openmrs/atlas:mysql_db
 image_data=openmrs/atlas:data
