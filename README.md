@@ -20,24 +20,31 @@ The simplest way to get started is the  **standalone** template:
 1. **Clone** this project from github into `/var/atlas` on your server: `git clone https://github.com/alexisduque/atlas-docker.git /var/atlas`
 2. **Configure** environnement variable, hostname, ports `binding in atlas.cfg`
 2. **Build** the image: `sudo ./launcher build atlas`
-5. **Start** the image: `sudo ./launcher start atlas`
+5. **Create a storage** container: `sudo ./launcher storage atlas`
+5. **Start Mysql Server** container: `sudo ./launcher start-db atlas`
+6. **Start** the image: `sudo ./launcher start atlas`
 
-Note 1: you can add yourself to the Docker group if you wish to avoid `sudo` with `usermod -aG docker <your-user-name>`.
+5. **Backup** your database : `sudo ./launcher backup atlas`, that will create backup_atlas.tar
+6. **Restore** your database : `sudo ./launcher restore atlas`, that will restore your database using backup_atlas.tar
 
-Note 2: you can build multiple atlas containers with different configurations, changing its name : `sudo ./launcher start atlas-first` and `sudo ./launcher start atlas-test`.
+**Note 1:** Stop all your running container before restoring data. 
+
+**Note 2:** you can add yourself to the Docker group if you wish to avoid `sudo` with `usermod -aG docker <your-user-name>`.
+
+**Note 3:** you can build multiple atlas containers with different configurations, changing its name : `sudo ./launcher start atlas-first` and `sudo ./launcher start atlas-test`.
 
 ### Configuration
 
 Rename atlas.cfg.sample to atlas.cfg and chaqnge values with your configuration :
 
 - `HTTP_PORT` : http port to access Atlas application (use 80, shutdown apache on your host)
-- `HTTPs_PORT` : https port to access Atlas application (use 443, shutdown apache on your host)
+- `HTTPS_PORT` : https port to access Atlas application (use 443, shutdown apache on your host)
 - `SSH_PORT` : port number to ssh to the container (use, 22 or 23 if sshd is allready running on your host)
 - `HOST` : choose your container hostname
 - `MYSQL_PASSWORD` : root mysql pqssword
 - `API_KEY` : ID API key for Atlas
 - `SITE_KEY` : ID Site key for Atlas
-- `SAMPLE_DATA` : set 1 to load a sample dataset
+- `SAMPLE_DATA` : set 1 to load a sample dataset (you can override existing dump with a new one)
 - `SERVER_URL` : your server URL (for ID multipass callback - http://server-ip/)
 - `CAPTURE_URL` : your server URL (for ID multipass callback)
 - `SERVER_DATA` : URL to get JSON with markers (http://server-ip/data.php?callback=loadSites)
@@ -60,6 +67,9 @@ Dockerfile for both the base image `atlas_base` and atlas image `Comming soon ..
 
 - `atlas_20` builds on the base image and configures Atlas Server.
 
+- `atlas_database` builds a simple Mysql Server container.
+
+- `atlas_volume` create a volume container, required by datatbase container to persist data.
 
 ### Launcher
 
@@ -67,15 +77,21 @@ The base directory contains a single bash script which is used to manage contain
 
 ```
 Usage: launcher COMMAND CONFIG
-Commands:
-    start:      Start/initialize a container
-    stop:       Stop a running container
-    restart:    Restart a container
-    destroy:    Stop and remove a container
-    ssh:        Start a bash shell in a running container
-    logs:       Docker logs for container
-    build:      Build a container for the config based on a template
-    update:     Destroy and build an Atlas App container based on atlas_base (doesn't affects base image)
+
+  start:      Start/initialize an atlas container
+  start-db:   Start/initialize a mysql container
+  storage:    Start/initialize an empty storage container
+  restore:    Restore data from ./backup.tar to storage container
+  backup:     Create a backup of storage container to ./backup.tar
+  stop:       Stop an atlas and mysql running container
+  restart:    Restart a container
+  destroy:    Stop and remove a container
+  ssh:        Start a bash shell in a running container
+  logs:       Docker logs for container
+  build:      Destroy and build an Atlas App container based on atlas_base (doesn't affects base image)
+  update:     Destroy and build an Atlas App container based on atlas_base
+  rebuild:    Rebuild a container (destroy old, bootstrap, start new)
+  clean:      Stop all containers and  remove all images from your local history !DANGER!
 ```
 
 ### Upgrading Atlas
