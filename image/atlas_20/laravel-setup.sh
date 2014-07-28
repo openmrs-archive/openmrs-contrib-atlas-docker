@@ -33,11 +33,6 @@ TMP_HOST=$(hostname)
 #Set production hostname in bootstrap/start.php
 sed -i 's/atlas-server/'$TMP_HOST'/' bootstrap/start.php
 
-if [ $SAMPLE_DATA = "1" ]
-then
-	mysql -uatlas -h $MYSQL_HOST -patlas --database atlas < /tmp/atlas.sql || { echo 'Command failed' ; exit 1; }
-fi
-
 php artisan migrate || { echo 'Command failed' ; exit 1; }
 
 rm /etc/apache2/sites-available/000-default.conf

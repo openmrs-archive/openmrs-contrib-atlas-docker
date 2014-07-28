@@ -22,7 +22,6 @@ ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD laravel-setup.sh /tmp/laravel-setup.sh
 ADD auth-setup.sh /tmp/auth-setup.sh
 ADD atlas.cfg /tmp/atlas.cfg
-ADD atlas.sql /tmp/atlas.sql
 ADD ssl.sh /tmp/ssl.sh
 ADD 000-default.conf /tmp/000-default.conf
 RUN chmod a+x /tmp/*.sh
