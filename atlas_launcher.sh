@@ -33,8 +33,12 @@ docker_ip=`/sbin/ifconfig | \
 usage () {
   echo "Usage: launcher COMMAND CONFIG [--skip-prereqs]"
   echo "Commands:"
-  echo "    start:      Start/initialize a container"
-  echo "    stop:       Stop a running container"
+  echo "    start:      Start/initialize a atlas container"
+  echo "    start-db:   Start/initialize a mysql container"
+  echo "    storage:    Start/initialize an empty storage container"
+  echo "    restore:    Restore data from ./backup.tar to storage container"
+  echo "    backup:     Create a backup of storage container to ./backup.tar"
+  echo "    stop:       Stop a atlas and mysql running container"
   echo "    restart:    Restart a container"
   echo "    destroy:    Stop and remove a container"
   echo "    ssh:        Start a bash shell in a running container"
@@ -165,6 +169,11 @@ run_stop(){
 }
 
 run_start(){
+  if test -z "$config"
+    then
+    echo "Missing installation name."
+    exit 1
+  fi
   if [ ! -e $cidfile ]
      then
        echo "No cid found, creating a new container"
@@ -204,6 +213,11 @@ run_start(){
 
 }
 run_create_storage(){
+  if test -z "$config"
+    then
+    echo "Missing installation name."
+    exit 1
+  fi
   storage=$config"_data"
   echo $storage
   echo "start storage"
@@ -217,7 +231,6 @@ run_create_storage(){
          echo $existing > $cidfiledata
          exit 0
        fi
-       echo $docker_path run "${env[@]}" -h $HOST -e DOCKER_HOST_IP=$docker_ip --name $storage -t --cidfile $cidfiledata $image_data
        $docker_path run "${env[@]}" --name $storage -t --cidfile $cidfiledata $image_data
        exit 0
      else
@@ -245,12 +258,16 @@ run_create_storage(){
 
 }
 run_start_mysql(){
+  if test -z "$config"
+    then
+    echo "Missing installation name."
+    exit 1
+  fi
   storage=$config"_data"
-  echo $storage
-  echo "start mysql server"
+  echo "Starting mysql server ..."
   if [ ! -e $cidfiledb ]
      then
-       echo "No cid found, creating a new container"
+       echo "No cid found for mysql container, creating a new container"
        volume="--volumes-from $storage"
 
        existing=`$docker_path ps -a | awk '{ print $1, $(NF) }' | grep "'$config_db'$" | awk '{ print $1 }'`
@@ -280,7 +297,7 @@ run_start_mysql(){
          exit 1
        fi
 
-       echo "cid found, ensuring container is started"
+       echo "Cid found, ensuring container is started"
        $docker_path start `cat $cidfiledb`
        exit 0
   fi
@@ -395,8 +412,30 @@ case "$command" in
       exit 0
       ;;
 
-  start-volume)
+  storage)
       run_create_storage
+      exit 0
+      ;;
+
+  backup)
+      if test -z "$config"
+        then
+        echo "Missing installation name."
+        exit 1
+      fi
+      $docker_path run --volumes-from $config"_data" -v $(pwd):/backup ubuntu \
+       tar cvf /backup/backup_$config.tar /var/lib/mysql
+      exit 0
+      ;;
+
+  restore)
+      if test -z "$config"
+        then
+        echo "Missing installation name."
+        exit 1
+      fi
+      $docker_path run --volumes-from atlas_data -v $(pwd):/backup busybox \
+       tar xvf /backup/backup_$config.tar
       exit 0
       ;;
 

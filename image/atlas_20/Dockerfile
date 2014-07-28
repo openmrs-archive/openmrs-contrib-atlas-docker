@@ -1,4 +1,4 @@
-FROM openmrs/atlas:base
+FROM openmrs/atlas:base_web
 MAINTAINER Alexis DUQUE "alexis.duque@openmrs.org"
 
 RUN useradd atlas -s /bin/bash -m -U &&\
