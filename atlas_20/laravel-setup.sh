@@ -11,25 +11,25 @@ SERVER_DATA=${SERVER_DATA:-https://${HOST_IP}:$HTTPS_PORT/data.php?callback=load
 SERVER_URL=${SERVER_URL:-https://${HOST_IP}:${HTTPS_PORT}/}
 
 cd /opt/atlas
-cp env.local.php .env.prod.php
+chown -R atlas:atlas /opt/atlas &&\
+chown -R www-data:www-data /opt/atlas/app/storage &&\
+chmod -R a+rwx /opt/atlas/app/storage
+
+cp env.local.php .env.docker.php
 
 sed -i 's/\/var\/www/\/opt\/atlas\/public/g' /etc/apache2/apache2.conf
 
-sed -i 's/user/atlas/g' .env.prod.php
-sed -i 's/password/atlas/g' .env.prod.php
-sed -i "s/secret'/secret',/g" .env.prod.php
-sed -i 's#http://localhost:3000#'$ID_HOST'#g' .env.prod.php
-sed -i 's#http://localhost/openmrs-contrib-atlas/public/data.php?callback=loadSites#'$SERVER_DATA'#g' .env.prod.php
-sed -i 's#http://localhost/openmrs-contrib-atlas/public/#'$CAPTURE_URL'#g' .env.prod.php
-sed -i 's/bin\/phantomjs/local\/bin\/phantomjs/g' .env.prod.php
-
-#Set correct database collation and charset 
-sed -i '0,/utf8/s/utf8/latin1/g' app/config/database.php
-sed -i 's/utf8_unicode_ci/latin1_swedish_ci/g' app/config/database.php
-
+sed -i 's/user/atlas/g' .env.docker.php
+sed -i 's/password/atlas/g' .env.docker.php
+sed -i "s/secret'/secret',/g" .env.docker.php
+sed -i 's#http://localhost:3000#'$ID_HOST'#g' .env.docker.php
+sed -i 's#http://localhost/openmrs-contrib-atlas/public/data.php?callback=loadSites#'$SERVER_DATA'#g' .env.docker.php
+sed -i 's#http://localhost/openmrs-contrib-atlas/public/#'$CAPTURE_URL'#g' .env.docker.php
+sed -i 's/bin\/phantomjs/local\/bin\/phantomjs/g' .env.docker.php
+ 
 TMP_HOST=$(hostname)
 #Set production hostname in bootstrap/start.php
-sed -i 's/atlas-server/'$TMP_HOST'/' bootstrap/start.php
+sed -i "31c'docker' => array('"$TMP_HOST"')," bootstrap/start.php
 
 service mysql start
 sleep 5
@@ -38,6 +38,7 @@ then
 	mysql -uatlas -patlas --database atlas < /tmp/atlas.sql || { echo 'Command failed' ; exit 1; }
 fi
 
+sudo -u atlas composer install
 php artisan migrate || { echo 'Command failed' ; exit 1; }
 
 rm /etc/apache2/sites-available/000-default.conf
@@ -56,20 +57,6 @@ sed -i -e"s/^bind-address\s*=\s*127.0.0.1/bind-address = 0.0.0.0/" /etc/mysql/my
 crontab /etc/crontab
 
 touch /etc/.initsuccess
-else
-cd /opt/atlas
-git remote update
-LOCAL=$(git rev-parse @)
-REMOTE=$(git rev-parse @{u})
-BASE=$(git merge-base @ @{u})
-
-if [ $LOCAL = $REMOTE ]; then
-    echo "Up-to-date"
-elif [ $LOCAL = $BASE ]; then
-    echo "Need to pull"
-    git pull origin master && composer update && php artisan migrate
-fi
-
 fi
 
 /usr/bin/supervisord
