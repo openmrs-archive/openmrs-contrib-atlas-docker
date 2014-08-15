@@ -29,6 +29,6 @@ RUN chmod a+x /tmp/*.sh
 ADD crontab /etc/crontab
 RUN crontab /etc/crontab
 
-EXPOSE 22 80 443 8888
+EXPOSE 22 80 8888
 
 CMD ["/tmp/laravel-setup.sh"]

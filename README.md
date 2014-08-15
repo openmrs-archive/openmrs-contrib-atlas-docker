@@ -18,14 +18,13 @@ If you do not do any of the above, as RoboCop once said, ["there will be… trou
 The simplest way to get started is the  **standalone** template:
 
 1. **Clone** this project from github into `/var/atlas` on your server: `git clone https://github.com/alexisduque/atlas-docker.git /var/atlas`
-2. **Configure** environnement variable, hostname, ports `binding in atlas.cfg`
-2. **Build** the image: `sudo ./launcher build atlas`
-5. **Create a storage** container: `sudo ./launcher storage atlas`
-5. **Start Mysql Server** container: `sudo ./launcher start-db atlas`
-6. **Start** the image: `sudo ./launcher start atlas`
-
-5. **Backup** your database : `sudo ./launcher backup atlas`, that will create backup_atlas.tar
-6. **Restore** your database : `sudo ./launcher restore atlas`, that will restore your database using backup_atlas.tar
+2. **Configure** environnement variable, hostname, ports mapping ` in atlas.cfg`
+3. **Build** the image: `sudo ./atlas_launcher build atlas`
+4. **Create a storage** container: `sudo ./atlas_launcher storage atlas`
+5. **Start Mysql Server** container: `sudo ./atlas_launcher start-db atlas`
+6. **Start** the image: `sudo ./atlas_launcher start atlas`
+7. **Backup** your database : `sudo ./atlas_launcher backup atlas`, that will create backup_atlas.tar
+8. **Restore** your database : `sudo ./atlas_launcher restore atlas`, that will restore your database using backup_atlas.tar
 
 **Note 1:** Stop all your running container before restoring data. 
 
@@ -38,7 +37,6 @@ The simplest way to get started is the  **standalone** template:
 Rename atlas.cfg.sample to atlas.cfg and chaqnge values with your configuration :
 
 - `HTTP_PORT` : http port to access Atlas application (use 80, shutdown apache on your host)
-- `HTTPS_PORT` : https port to access Atlas application (use 443, shutdown apache on your host)
 - `SSH_PORT` : port number to ssh to the container (use, 22 or 23 if sshd is allready running on your host)
 - `HOST` : choose your container hostname
 - `MYSQL_PASSWORD` : root mysql pqssword
@@ -57,7 +55,7 @@ Contains container ids for currently running Docker containers. cids are Docker'
 
 #### `/containers`
 
-This directory is for container definitions for your various Discourse containers. You are in charge of this directory, it ships empty.
+This directory is for container definitions for Atlas containers. You are in charge of this directory, it ships empty.
 
 #### `/image`
 
@@ -98,13 +96,13 @@ Usage: launcher COMMAND CONFIG
 
 Update Atlas Application
   - `git clone https://https://github.com/alexisduque/atlas-docker`
-  - `./launcher update atlas`
-  - `./launcher start atlas`
+  - `sudo ./atlas_launcher update atlas`
+  - `sudo ./atlas_launcher start atlas`
 
 Create a new base image by running:
 
-  - `./launcher destroy my_image`
-  - `./launcher build my_image`
-  - `./launcher start my_image`
+  - `sudo ./atlas_launcher destroy my_image`
+  - `sudo ./atlas_launcher build my_image`
+  - `sudo ./atlas_launcher start my_image`
 
 [1]: https://github.com/discourse/discourse_docker
