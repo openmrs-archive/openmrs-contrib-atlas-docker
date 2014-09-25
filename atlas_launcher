@@ -9,7 +9,7 @@ cd "$(dirname "$0")"
 
 docker_min_version='0.9.1'
 docker_rec_version='0.11.1'
-
+atlas_version='21'
 config_file=containers/"$config".yml
 cidfile=cids/"$config".cid
 cidfiledata=cids/"$config"_data.cid
@@ -18,7 +18,7 @@ cidbootstrap=cids/"$config"_boostrap.cid
 
 test_image=ubuntu:14.04
 image=openmrs/atlas:base_web
-image_atlas=openmrs/atlas:atlas_20
+image_atlas=openmrs/atlas:atlas_$atlas_version
 image_db=openmrs/atlas:mysql_db
 image_data=openmrs/atlas:data
 docker_path=`which docker.io || which docker`
@@ -31,7 +31,7 @@ docker_ip=`/sbin/ifconfig | \
 
 
 usage () {
-  echo "Usage: launcher COMMAND CONFIG [--skip-prereqs]"
+  echo "Usage: atlas_launcher COMMAND CONFIG [--skip-prereqs]"
   echo "Commands:"
   echo "    start:      Start/initialize a atlas container"
   echo "    start-db:   Start/initialize a mysql container"
@@ -177,8 +177,11 @@ run_start(){
   if [ ! -e $cidfile ]
      then
        echo "No cid found, creating a new container"
-       ports="-p $SSH_PORT:22 -p $HTTP_PORT:80 -p 8888:8888"
-
+       ports="-p $SSH_PORT:22 -p $HTTP_PORT:80"
+       if [ $SELF_ID == "TRUE" ]
+         then
+         ports="$ports -p $ID_PORT:8888"
+       fi
        existing=`$docker_path ps -a | awk '{ print $1, $(NF) }' | grep "$config$" | awk '{ print $1 }'`
        echo $existing
        if [ ! -z $existing ]
@@ -187,7 +190,12 @@ run_start(){
          echo $existing > $cidfile
          exit 1
        fi
-       $docker_path run "${env[@]}" -d -h $HOST -e DOCKER_HOST_IP=$docker_ip --name $config -t --link $config"_db":$config"_db" --cidfile $cidfile $ports $image_atlas
+       params="-h $HOST -e DOCKER_HOST_IP=$docker_ip --name $config -t"
+       if [ $MODE == "link" ]
+        then
+         params="$params --link $config_db:$config_db" 
+       fi
+       $docker_path run "${env[@]}" -d $params --cidfile $cidfile $ports $image_atlas
        exit 0
      else
        cid=`cat $cidfile`
@@ -310,11 +318,11 @@ run_build(){
   then 
     rm image/atlas_base/auth_key.pub
   fi
-  if [ -f image/atlas_20/atlas.cfg ]
+  if [ -f image/atlas_$atlas_version/atlas.cfg ]
   then 
-    image/atlas_20/atlas.cfg
+    image/atlas_$atlas_version/atlas.cfg
   fi
-  cp atlas.cfg image/atlas_20/atlas.cfg
+  cp atlas.cfg image/atlas_$atlas_version/atlas.cfg
   echo $ssh_pub_key > image/atlas_base/auth_key.pub
   # Is the image available?
   # If not, pull it here so the user is aware what's happening.
@@ -325,7 +333,7 @@ run_build(){
   env=("${env[@]}" "-e" "SSH_PUB_KEY=$ssh_pub_key")
 
   ($docker_path build -t $image ./image/atlas_base && \
-  $docker_path build -t $image_atlas ./image/atlas_20) || \
+  $docker_path build -t $image_atlas ./image/atlas_$atlas_version) || \
   ( echo "An error occur during the build process ." && exit 1)
 }
 
@@ -341,11 +349,11 @@ run_update(){
   get_ssh_pub_key
   $docker_path history $image_atlas >/dev/null 2>&1 && $docker_path rmi -f $image_atlas 
 
-  if [ -f image/atlas_20/atlas.cfg ]
+  if [ -f image/atlas_$atlas_version/atlas.cfg ]
   then 
-    image/atlas_20/atlas.cfg
+    image/atlas_$atlas_version/atlas.cfg
   fi
-  cp atlas.cfg image/atlas_20/atlas.cfg
+  cp atlas.cfg image/atlas_$atlas_version/atlas.cfg
 
   # Is the image available?
   # If not, pull it here so the user is aware what's happening.
@@ -355,14 +363,14 @@ run_update(){
 
   env=("${env[@]}" "-e" "SSH_PUB_KEY=$ssh_pub_key")
 
-  $docker_path build -t $image_atlas ./image/atlas_20 || { echo 'Command failed' ; exit 1; }
+  $docker_path build -t $image_atlas ./image/atlas_$atlas_version || { echo 'Command failed' ; exit 1; }
 
 }
 
 case "$command" in
   build)
       run_build
-      echo "Successfully bootstrapped, to startup use ./launcher start $config"
+      echo "Successfully bootstrapped, to startup use ./atlas_launcher start $config"
       exit 0
       ;;
 

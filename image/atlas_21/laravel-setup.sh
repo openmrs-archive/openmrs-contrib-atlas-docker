@@ -17,8 +17,8 @@ cp env.local.php .env.prod.php
 sed -i 's/\/var\/www/\/opt\/atlas\/public/g' /etc/apache2/apache2.conf
 
 sed -i "s/'DB_HOST' => 'localhost'/'DB_HOST' => '$MYSQL_HOST'/g" .env.prod.php
-sed -i 's/user/atlas/g' .env.prod.php
-sed -i 's/password/atlas/g' .env.prod.php
+sed -i 's/user/'$MYSQL_USER'/g' .env.prod.php
+sed -i 's/password/'$MYSQL_PASSWORD'/g' .env.prod.php
 sed -i "s/secret'/secret',/g" .env.prod.php
 sed -i 's#http://localhost:3000#'$ID_HOST'#g' .env.prod.php
 sed -i 's#http://localhost/openmrs-contrib-atlas/public/data.php?callback=loadSites#'$SERVER_DATA'#g' .env.prod.php
