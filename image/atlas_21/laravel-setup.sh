@@ -33,7 +33,7 @@ TMP_HOST=$(hostname)
 #Set production hostname in bootstrap/start.php
 sed -i 's/atlas-server/'$TMP_HOST'/' bootstrap/start.php
 
-php artisan migrate || { echo 'Command failed' ; exit 1; }
+php artisan migrate
 
 rm /etc/apache2/sites-available/000-default.conf
 mv /tmp/000-default.conf /etc/apache2/sites-available/000-default.conf
@@ -42,7 +42,10 @@ sed -i 's/HTTPS-PORT/'$HTTPS_PORT'/g' /etc/apache2/sites-available/000-default.c
 
 cd /opt/auth
 
-echo "Listen 8888" >> /etc/apache2/apache2.conf
+if [ $SELF_ID == "TRUE" ]
+then
+  echo "Listen 8888" >> /etc/apache2/apache2.conf
+fi
 
 sed -i 's#https://atlas.local/#'$SERVER_URL#'g' config.php
 

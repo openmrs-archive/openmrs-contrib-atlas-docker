@@ -191,7 +191,7 @@ run_start(){
          exit 1
        fi
        params="-h $HOST -e DOCKER_HOST_IP=$docker_ip --name $config -t"
-       if [ $MODE == "link" ]
+       if [ $MODE == "ALL" ]
         then
          params="$params --link $config_db:$config_db" 
        fi
