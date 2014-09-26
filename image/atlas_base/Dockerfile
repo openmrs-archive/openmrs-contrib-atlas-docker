@@ -20,8 +20,6 @@ RUN mkdir -p /var/run/sshd &&\
 #Install OpenSSH and Supervisor
 RUN apt-get install -y openssh-server supervisor
 RUN mkdir -p /root/.ssh
-ADD auth_key.pub /root/.ssh/authorized_keys
-RUN chmod 640 /root/.ssh/authorized_keys
 
 #Install Lamp server
 RUN apt-get update && apt-get install -y wget nano apache2 mysql-client mysql-server libapache2-mod-php5 php5-mysql php5-mcrypt &&\

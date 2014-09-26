@@ -4,12 +4,13 @@
 
 if [ ! -e /etc/.initsuccess ]
 then
-/tmp/ssl.sh
 
 MYSQL_HOST=${MYSQL_HOST:-atlas_db}
 ID_HOST=${ID_HOST:-http://${HOST_IP}:8888}
 SERVER_DATA=${SERVER_DATA:-https://${HOST_IP}:$HTTPS_PORT/data.php?callback=loadSites}
 SERVER_URL=${SERVER_URL:-https://${HOST_IP}:${HTTPS_PORT}/}
+echo $SSH_PUB_KEY > /root/.ssh/authorized_keys
+chmod 640 /root/.ssh/authorized_keys
 
 cd /opt/atlas
 cp env.local.php .env.prod.php
@@ -24,6 +25,7 @@ sed -i 's#http://localhost:3000#'$ID_HOST'#g' .env.prod.php
 sed -i 's#http://localhost/openmrs-contrib-atlas/public/data.php?callback=loadSites#'$SERVER_DATA'#g' .env.prod.php
 sed -i 's#http://localhost/openmrs-contrib-atlas/public/#'$CAPTURE_URL'#g' .env.prod.php
 sed -i 's/bin\/phantomjs/local\/bin\/phantomjs/g' .env.prod.php
+sed -i 's/UTC/'$TIMEZONE'/g' .env.prod.php
 
 #Set correct database collation and charset 
 sed -i '0,/utf8/s/utf8/latin1/g' app/config/database.php
@@ -45,6 +47,7 @@ cd /opt/auth
 if [ $SELF_ID == "TRUE" ]
 then
   echo "Listen 8888" >> /etc/apache2/apache2.conf
+  a2ensite auth.conf
 fi
 
 sed -i 's#https://atlas.local/#'$SERVER_URL#'g' config.php

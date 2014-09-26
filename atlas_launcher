@@ -7,8 +7,8 @@ opt=$3
 
 cd "$(dirname "$0")"
 
-docker_min_version='0.9.1'
-docker_rec_version='0.11.1'
+docker_min_version='1.1.1'
+docker_rec_version='1.2.0'
 atlas_version='21'
 config_file=containers/"$config".yml
 cidfile=cids/"$config".cid
@@ -169,6 +169,8 @@ run_stop(){
 }
 
 run_start(){
+  get_ssh_pub_key
+  env=("${env[@]}" "-e" "SSH_PUB_KEY=$ssh_pub_key")
   if test -z "$config"
     then
     echo "Missing installation name."
@@ -314,16 +316,16 @@ run_start_mysql(){
 
 run_build(){
   get_ssh_pub_key
-  if [ -f image/atlas_base/auth_key.pub ]
+  if [ -f image/atlas_$atlas_version/auth_key.pub ]
   then 
-    rm image/atlas_base/auth_key.pub
+    rm image/atlas_$atlas_version/auth_key.pub
   fi
   if [ -f image/atlas_$atlas_version/atlas.cfg ]
   then 
     image/atlas_$atlas_version/atlas.cfg
   fi
   cp atlas.cfg image/atlas_$atlas_version/atlas.cfg
-  echo $ssh_pub_key > image/atlas_base/auth_key.pub
+  echo $ssh_pub_key > image/atlas_$atlas_version/auth_key.pub
   # Is the image available?
   # If not, pull it here so the user is aware what's happening.
   $docker_path history $image >/dev/null 2>&1 || $docker_path pull $image
@@ -355,7 +357,7 @@ run_update(){
   fi
   cp atlas.cfg image/atlas_$atlas_version/atlas.cfg
 
-  # Is the image available?
+  # Is the base image available?
   # If not, pull it here so the user is aware what's happening.
   $docker_path history $image >/dev/null 2>&1 || $docker_path build -t $image ./image/atlas_base && \
 
