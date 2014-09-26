@@ -65,8 +65,10 @@ BASE=$(git merge-base @ @{u})
 if [ $LOCAL = $REMOTE ]; then
     echo "Up-to-date"
 elif [ $LOCAL = $BASE ]; then
+  if [ $UPDATE_ON_START = "TRUE" ]; then
     echo "Need to pull"
     git pull origin master && composer update && php artisan migrate
+  fi
 fi
 
 fi

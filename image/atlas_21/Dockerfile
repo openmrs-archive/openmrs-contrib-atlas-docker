@@ -19,7 +19,7 @@ ADD laravel-setup.sh /tmp/laravel-setup.sh
 ADD auth-setup.sh /tmp/auth-setup.sh
 ADD atlas.cfg /tmp/atlas.cfg
 ADD 000-default.conf /tmp/000-default.conf
-ADD auth_key.pub /root/.ssh/authorized_keys
+
 RUN chmod 640 /root/.ssh/authorized_keys
 RUN chmod a+x /tmp/*.sh
 
