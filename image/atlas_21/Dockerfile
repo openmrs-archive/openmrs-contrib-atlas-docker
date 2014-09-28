@@ -16,11 +16,12 @@ ADD auth.conf /etc/apache2/sites-available/auth.conf
 
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD laravel-setup.sh /tmp/laravel-setup.sh
+ADD mysql-setup.sh /tmp/mysql-setup.sh
 ADD auth-setup.sh /tmp/auth-setup.sh
 ADD atlas.cfg /tmp/atlas.cfg
 ADD 000-default.conf /tmp/000-default.conf
+ADD atlas.sql /tmp/atlas.sql
 
-RUN chmod 640 /root/.ssh/authorized_keys
 RUN chmod a+x /tmp/*.sh
 
 ADD crontab /etc/crontab

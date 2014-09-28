@@ -1,28 +1,31 @@
 HTTP_PORT=80
 SSH_PORT=23
-ID_PORT=8888
 
-SERVER_URL=https://localhost/
+SERVER_URL=http://localhost:82/
 CAPTURE_URL=https://atlas.openmrs.org
-SERVER_DATA=https://localhost/data.php?callback=loadSites
+SERVER_DATA=http://localhost:82/data.php?callback=loadSites
 
 API_KEY=1234567890abcdef
 SITE_KEY=localhost
-ID_HOST=http://localhost:$ID_PORT
+ID_HOST=http://localhost:8888
 
 HOST=atlas
 
-MYSQL_HOST
-MYSQL_PASSWORD=mysql
-MYSQL_USER=mysql
+#172.17.42.1 is the host ip in Docker subnet.
+MYSQL_HOST=172.17.42.1
+MYSQL_PASSWORD=atlas
+MYSQL_USER=atlas
 TIMEZONE=UTC
 
-SAMPLE_DATA=1
+#ALL: Start a mysql server container and link it to atlas container.
+#WEB: Embeded mysql server or connect to the host mysql server.
 
-#MODE=STANDALONE
 #MODE=ALL
 MODE=WEB
 
+#Start a fake ID server (dev/staging only!)
 SELF_ID=TRUE
+ID_PORT=8888
 
+#Pull latest code from atlas repo when container starts
 UPDATE_ON_START=TRUE

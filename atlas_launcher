@@ -2,6 +2,7 @@
 
 command=$1
 config=$2
+config_db=${2}_db
 opt=$3
 . atlas.cfg
 
@@ -15,6 +16,7 @@ cidfile=cids/"$config".cid
 cidfiledata=cids/"$config"_data.cid
 cidfiledb=cids/"$config"_db.cid
 cidbootstrap=cids/"$config"_boostrap.cid
+env=()
 
 test_image=ubuntu:14.04
 image=openmrs/atlas:base_web
@@ -28,7 +30,6 @@ docker_ip=`/sbin/ifconfig | \
                 awk '{ if ( $1 == "inet" ) { print $2 } else if ( $2 == "Link" ) { printf "%s:" ,$1 } }' | \
                 grep docker0 | \
                 awk -F: '{ print $3 }';`
-
 
 usage () {
   echo "Usage: atlas_launcher COMMAND CONFIG [--skip-prereqs]"
@@ -139,6 +140,14 @@ get_ssh_pub_key() {
   ssh_pub_key="$(cat ~/.ssh/id_rsa.pub 2>/dev/null || cat ~/.ssh/id_dsa.pub)"
 }
 
+get_env_vars() {
+  file=( $( cat atlas.cfg ) )
+  for (( i = 0; i < ${#file[@]}; i++ ))
+  do
+    [[ ${file[$i]} = \#* ]] && continue
+    env=("${env[@]}" "-e" "${file[$i]}")
+  done
+}
 
 install_docker() {
 
@@ -170,6 +179,7 @@ run_stop(){
 
 run_start(){
   get_ssh_pub_key
+  get_env_vars
   env=("${env[@]}" "-e" "SSH_PUB_KEY=$ssh_pub_key")
   if test -z "$config"
     then
@@ -195,7 +205,8 @@ run_start(){
        params="-h $HOST -e DOCKER_HOST_IP=$docker_ip --name $config -t"
        if [ $MODE == "ALL" ]
         then
-         params="$params --link $config_db:$config_db" 
+         params="$params --link $config_db:$config_db"
+         run_create_storage && run_start_mysql
        fi
        $docker_path run "${env[@]}" -d $params --cidfile $cidfile $ports $image_atlas
        exit 0
@@ -224,7 +235,7 @@ run_start(){
 }
 run_create_storage(){
   if test -z "$config"
-    then
+  then
     echo "Missing installation name."
     exit 1
   fi
@@ -232,84 +243,85 @@ run_create_storage(){
   echo $storage
   echo "start storage"
   if [ ! -e $cidfiledata ]
-     then
-       echo "No cid found, creating a new storage container"
-       existing=`$docker_path ps -a | awk '{ print $1, $(NF) }' | grep "'$storage'$" | awk '{ print $1 }'`
-       if [ ! -z $existing ]
-       then
-         echo "Found an existing container by its name, recovering cidfile, please rerun"
-         echo $existing > $cidfiledata
-         exit 0
-       fi
-       $docker_path run "${env[@]}" --name $storage -t --cidfile $cidfiledata $image_data
-       exit 0
-     else
-       cid=`cat $cidfiledata`
+  then
+    echo "No cid found, creating a new storage container"
+    existing=`$docker_path ps -a | awk '{ print $1, $(NF) }' | grep "'$storage'$" | awk '{ print $1 }'`
+    if [ ! -z $existing ]
+    then
+      echo "Found an existing container by its name, recovering cidfile, please rerun"
+      echo $existing > $cidfiledata
+      exit 0
+    fi
+    $docker_path run "${env[@]}" --name $storage -t --cidfile $cidfiledata $image_data
+    #exit 0
+  else
+    cid=`cat $cidfiledata`
 
-       if [ -z $cid ]
-       then
-         echo "Detected empty cid file, deleting, please re-run"
-         rm $cidfiledata
-         exit 1
-       fi
+    if [ -z $cid ]
+    then
+      echo "Detected empty cid file, deleting, please re-run"
+      rm $cidfiledata
+      exit 1
+    fi
 
-       found=`$docker_path ps -q -a --no-trunc | grep $cid`
-       if [ -z $found ]
-       then
-         echo "Invalid cid file, deleting, please re-run"
-         rm $cidfiledata
-         exit 1
-       fi
+    found=`$docker_path ps -q -a --no-trunc | grep $cid`
+    if [ -z $found ]
+    then
+      echo "Invalid cid file, deleting, please re-run"
+      rm $cidfiledata
+      exit 1
+    fi
 
-       echo "cid found, ensuring container is started"
-       $docker_path start `cat $cidfiledata`
-       exit 0
+    echo "cid found, ensuring container is started"
+    $docker_path start `cat $cidfiledata`
+    #exit 0
   fi
-
 }
+
 run_start_mysql(){
   if test -z "$config"
     then
     echo "Missing installation name."
     exit 1
   fi
+  get_env_vars
   storage=$config"_data"
   echo "Starting mysql server ..."
   if [ ! -e $cidfiledb ]
-     then
-       echo "No cid found for mysql container, creating a new container"
-       volume="--volumes-from $storage"
+  then
+    echo "No cid found for mysql container, creating a new container"
+    volume="--volumes-from $storage"
 
-       existing=`$docker_path ps -a | awk '{ print $1, $(NF) }' | grep "'$config_db'$" | awk '{ print $1 }'`
-       if [ ! -z $existing ]
-       then
-         echo "Found an existing container by its name, recovering cidfile, please rerun"
-         echo $existing > $cidfiledb
-         exit 0
-       fi
-       $docker_path run "${env[@]}" --name $config'_db' -d -t --cidfile $cidfiledb $volume $image_db
-       exit 0
-     else
-       cid=`cat $cidfiledb`
+    existing=`$docker_path ps -a | awk '{ print $1, $(NF) }' | grep "'$config_db'$" | awk '{ print $1 }'`
+    if [ ! -z $existing ]
+    then
+      echo "Found an existing container by its name, recovering cidfile, please rerun"
+      echo $existing > $cidfiledb
+      exit 0
+    fi
+    $docker_path run "${env[@]}" --name $config'_db' -d -t --cidfile $cidfiledb $volume $image_db
+    #exit 0
+  else
+    cid=`cat $cidfiledb`
 
-       if [ -z $cid ]
-       then
-         echo "Detected empty cid file, deleting, please re-run"
-         rm $cidfiledb
-         exit 1
-       fi
+    if [ -z $cid ]
+    then
+      echo "Detected empty cid file, deleting, please re-run"
+      rm $cidfiledb
+      exit 1
+    fi
 
-       found=`$docker_path ps -q -a --no-trunc | grep $cid`
-       if [ -z $found ]
-       then
-         echo "Invalid cid file, deleting, please re-run"
-         rm $cidfiledb
-         exit 1
-       fi
+    found=`$docker_path ps -q -a --no-trunc | grep $cid`
+    if [ -z $found ]
+    then
+      echo "Invalid cid file, deleting, please re-run"
+      rm $cidfiledb
+      exit 1
+    fi
 
-       echo "Cid found, ensuring container is started"
-       $docker_path start `cat $cidfiledb`
-       exit 0
+    echo "Cid found, ensuring container is started"
+    $docker_path start `cat $cidfiledb`
+    #exit 0
   fi
 
 }
@@ -353,7 +365,7 @@ run_update(){
 
   if [ -f image/atlas_$atlas_version/atlas.cfg ]
   then 
-    image/atlas_$atlas_version/atlas.cfg
+    rm image/atlas_$atlas_version/atlas.cfg
   fi
   cp atlas.cfg image/atlas_$atlas_version/atlas.cfg
 
@@ -481,6 +493,7 @@ case "$command" in
         then
           $docker_path rm `cat $cidfile` && rm $cidfile
       fi
+      echo "Successfully updated, to startup use ./atlas_launcher start $config"
       exit 0
       ;;
 

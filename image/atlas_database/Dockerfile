@@ -2,7 +2,6 @@ FROM ubuntu:14.04
 MAINTAINER Alexis DUQUE "alexis.duque@openmrs.org"
 
 VOLUME /var/lib/mysql
-ENV MYSQL_PASSWORD mysql
 
 #Add universe repository and update
 RUN echo "debconf debconf/frontend select Teletype" | debconf-set-selections &&apt-get -y update &&\
@@ -16,7 +15,7 @@ RUN apt-get -y update &&\
 
 RUN apt-get -y install mysql-client mysql-server
 
-RUN sed -i -e"s/^bind-address\s*=\s*127.0.0.1/bind-address = 0.0.0.0/" /etc/mysql/my.cnf
+RUN sed -i -e"s/^bind-address\s*=\s*127.0.0.1/#bind-address = 0.0.0.0/" /etc/mysql/my.cnf
 
 ADD ./run.sh /tmp/run.sh
 RUN chmod a+rwx /tmp/run.sh
