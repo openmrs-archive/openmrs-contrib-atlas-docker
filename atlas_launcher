@@ -334,13 +334,13 @@ run_build(){
   fi
   if [ -f image/atlas_$atlas_version/atlas.cfg ]
   then 
-    image/atlas_$atlas_version/atlas.cfg
+    rm image/atlas_$atlas_version/atlas.cfg
   fi
   cp atlas.cfg image/atlas_$atlas_version/atlas.cfg
   echo $ssh_pub_key > image/atlas_$atlas_version/auth_key.pub
   # Is the image available?
   # If not, pull it here so the user is aware what's happening.
-  $docker_path history $image >/dev/null 2>&1 || $docker_path pull $image
+  #$docker_path history $image >/dev/null 2>&1 || $docker_path pull $image
 
   rm -f $cidbootstrap
 

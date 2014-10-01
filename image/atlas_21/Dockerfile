@@ -1,6 +1,9 @@
 FROM openmrs/atlas:base_web
 MAINTAINER Alexis DUQUE "alexis.duque@openmrs.org"
 
+RUN echo "root:password" | chpasswd
+RUN sed --in-place=.bak 's/without-password/yes/' /etc/ssh/sshd_config
+
 RUN useradd atlas -s /bin/bash -m -U &&\
     mkdir /opt/atlas && cd /opt &&\
     git clone https://github.com/openmrs/openmrs-contrib-atlas.git atlas &&\
