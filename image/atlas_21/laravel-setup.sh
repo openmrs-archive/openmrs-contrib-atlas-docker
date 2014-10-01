@@ -26,6 +26,8 @@ then
   sed -i 's/\/var\/www/\/opt\/atlas\/public/g' /etc/apache2/apache2.conf
 
   sed -i "s/'DB_HOST' => 'localhost'/'DB_HOST' => '$MYSQL_HOST'/g" .env.prod.php
+  sed -i "s/'SITE_KEY' => 'localhost'/'SITE_KEY' => '$SITE_KEY'/g" .env.prod.php
+  sed -i "s/'API_KEY' => '1234567890abcdef'/'API_KEY' => '$API_KEY'/g" .env.prod.php 
   sed -i 's/user/'$MYSQL_USER'/g' .env.prod.php
   sed -i 's/password/'$MYSQL_PASSWORD'/g' .env.prod.php
   sed -i "s/secret'/secret',/g" .env.prod.php
