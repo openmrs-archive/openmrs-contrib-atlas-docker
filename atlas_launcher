@@ -4,7 +4,8 @@ command=$1
 config=$2
 config_db=${2}_db
 opt=$3
-. atlas.cfg
+script_path="`dirname \"$0\"`"
+source $script_path/atlas.cfg
 
 cd "$(dirname "$0")"
 
@@ -346,8 +347,8 @@ run_build(){
 
   env=("${env[@]}" "-e" "SSH_PUB_KEY=$ssh_pub_key")
 
-  ($docker_path build -t $image ./image/atlas_base && \
-  $docker_path build -t $image_atlas ./image/atlas_$atlas_version) || \
+  ($docker_path build -t $image $script_path/image/atlas_base && \
+  $docker_path build -t $image_atlas $script_path/image/atlas_$atlas_version) || \
   ( echo "An error occur during the build process ." && exit 1)
 }
 
@@ -371,20 +372,20 @@ run_update(){
 
   # Is the base image available?
   # If not, pull it here so the user is aware what's happening.
-  $docker_path history $image >/dev/null 2>&1 || $docker_path build -t $image ./image/atlas_base && \
+  $docker_path history $image >/dev/null 2>&1 || $docker_path build -t $image $script_path/image/atlas_base && \
 
   rm -f $cidbootstrap
 
   env=("${env[@]}" "-e" "SSH_PUB_KEY=$ssh_pub_key")
 
-  $docker_path build -t $image_atlas ./image/atlas_$atlas_version || { echo 'Command failed' ; exit 1; }
+  $docker_path build -t $image_atlas $script_path/image/atlas_$atlas_version || { echo 'Command failed' ; exit 1; }
 
 }
 
 case "$command" in
   build)
       run_build
-      echo "Successfully bootstrapped, to startup use ./atlas_launcher start $config"
+      echo "Successfully bootstrapped, to startup use $script_path/atlas_launcher start $config"
       exit 0
       ;;
 
