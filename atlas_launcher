@@ -48,7 +48,7 @@ usage () {
   echo "    build:      Build a container"
   echo "    update:     Destroy and build an Atlas App container based on atlas_base"
   echo "    rebuild:    Rebuild a container (destroy old, bootstrap, start new)"
-  echo "    clean:      Stop all containers and  remove all images from your local history !DANGER!"
+  echo "    clean:      Stop Atlas containers and remove Atlas images from your local history !DANGER!"
   echo
   echo "Options:"
   echo "    --skip-prereqs   Don't check prerequisites"
@@ -513,9 +513,9 @@ case "$command" in
       ;;
 
   clean)
-      docker stop $(docker ps -a -q)
-      docker rm -f $(docker ps -a -q)
-      docker rmi -f $(docker images -a -q)
+      docker stop $(docker ps -a -q -f 'image=atlas')
+      docker rm -f $(docker ps -a -q -f 'image=atlas')
+      docker rmi -f $(docker images -a | awk '$1 ~ /atlas/ { print $3 }')
       exit 0
       ;;
 esac
